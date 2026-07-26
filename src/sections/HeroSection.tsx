@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import ScrambleIn from '../components/ScrambleIn';
 import Navbar from './Navbar';
@@ -16,44 +16,54 @@ export default function HeroSection() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 引用保存——避免 StrictMode cleanup 后闭包过期
+  const videoReadyRef = useRef(false);
+  const seekingRef = useRef(false);
+  const pendingTimeRef = useRef(0);
+
   // 鼠标拖拽控制视频进度
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let seeking = false;
-    let pendingTime = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const ratio = e.clientX / window.innerWidth;
-      const time = ratio * video.duration;
-      if (!seeking) {
-        seeking = true;
-        video.currentTime = time;
-      } else {
-        pendingTime = time;
-      }
-    };
-
-    const handleSeeked = () => {
-      seeking = false;
-      if (pendingTime !== 0) {
-        seeking = true;
-        video.currentTime = pendingTime;
-        pendingTime = 0;
-      }
-    };
-
-    const onLoaded = () => {
+    const handleLoadedMetadata = () => {
+      videoReadyRef.current = true;
       video.pause();
     };
 
-    video.addEventListener('loadeddata', onLoaded);
+    const handleSeeked = () => {
+      seekingRef.current = false;
+      if (pendingTimeRef.current !== 0 && videoReadyRef.current) {
+        seekingRef.current = true;
+        video.currentTime = pendingTimeRef.current;
+        pendingTimeRef.current = 0;
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!videoReadyRef.current || !Number.isFinite(video.duration)) return;
+      const ratio = e.clientX / window.innerWidth;
+      const time = ratio * video.duration * 0.8;
+      if (!seekingRef.current) {
+        seekingRef.current = true;
+        video.currentTime = time;
+      } else {
+        pendingTimeRef.current = time;
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('seeked', handleSeeked);
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
+    // 如果视频已经加载完毕（快速网络），手动触发
+    if (video.readyState >= 1) {
+      handleLoadedMetadata();
+    }
+
     return () => {
-      video.removeEventListener('loadeddata', onLoaded);
+      videoReadyRef.current = false;
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('seeked', handleSeeked);
       window.removeEventListener('mousemove', handleMouseMove);
     };
