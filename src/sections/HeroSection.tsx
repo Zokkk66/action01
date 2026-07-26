@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import ScrambleIn from '../components/ScrambleIn';
 import Navbar from './Navbar';
@@ -16,44 +16,71 @@ export default function HeroSection() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 鼠标拖拽控制视频进度
+  // 鼠标拖拽控制视频进度（delta-based）
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    let prevX = 0;
+    let initialized = false;
     let seeking = false;
     let pendingTime = 0;
+    let videoReady = false;
+    const SENSITIVITY = 0.8;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const ratio = e.clientX / window.innerWidth;
-      const time = ratio * video.duration;
+      if (!videoReady || !Number.isFinite(video.duration)) return;
+
+      if (!initialized) {
+        prevX = e.clientX;
+        initialized = true;
+        return;
+      }
+
+      const deltaX = e.clientX - prevX;
+      prevX = e.clientX;
+
+      if (deltaX === 0) return;
+
+      // delta 映射到视频时间偏移
+      const deltaTime = (deltaX / window.innerWidth) * video.duration * SENSITIVITY;
+      const newTime = Math.max(0, Math.min(video.duration, video.currentTime + deltaTime));
+
       if (!seeking) {
         seeking = true;
-        video.currentTime = time;
+        video.currentTime = newTime;
       } else {
-        pendingTime = time;
+        pendingTime = newTime;
       }
     };
 
     const handleSeeked = () => {
       seeking = false;
-      if (pendingTime !== 0) {
+      if (pendingTime !== 0 && videoReady) {
         seeking = true;
         video.currentTime = pendingTime;
         pendingTime = 0;
       }
     };
 
-    const onLoaded = () => {
+    const handleLoaded = () => {
+      videoReady = true;
       video.pause();
+      video.currentTime = 0;
     };
 
-    video.addEventListener('loadeddata', onLoaded);
+    video.addEventListener('loadedmetadata', handleLoaded);
     video.addEventListener('seeked', handleSeeked);
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
+    // 如果视频已经缓存好了
+    if (video.readyState >= 1) {
+      handleLoaded();
+    }
+
     return () => {
-      video.removeEventListener('loadeddata', onLoaded);
+      videoReady = false;
+      video.removeEventListener('loadedmetadata', handleLoaded);
       video.removeEventListener('seeked', handleSeeked);
       window.removeEventListener('mousemove', handleMouseMove);
     };
