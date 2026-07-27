@@ -26,7 +26,7 @@ export default function HeroSection() {
     let seeking = false;
     let pendingTime = 0;
     let videoReady = false;
-    const SENSITIVITY = 0.8;
+    const SENSITIVITY = 2.5;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!videoReady || !Number.isFinite(video.duration)) return;
