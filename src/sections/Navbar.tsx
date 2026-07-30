@@ -30,7 +30,7 @@ export default function Navbar({ visible }: NavbarProps) {
       <div className="flex gap-2">
         {/* Logo pill */}
         <motion.div
-          className={`hidden h-12 items-center gap-2.5 rounded-[14px] bg-white/15 px-5 backdrop-blur-md md:flex ${menuOpen ? 'sm:hidden' : ''}`}
+          className={`hidden h-12 items-center gap-2.5 rounded-[14px] bg-white/15 px-5 backdrop-blur-md ${menuOpen ? 'md:hidden' : 'md:flex'}`}
           whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.22)' }}
           whileTap={{ scale: 0.98 }}
           animate={{ opacity: menuOpen ? 0 : 1, width: menuOpen ? 0 : 'auto' }}
@@ -101,12 +101,14 @@ export default function Navbar({ visible }: NavbarProps) {
         {/* Expanding menu pill (mobile) */}
         <motion.div
           className="flex h-9 items-center rounded-[10px] bg-white/15 backdrop-blur-md sm:hidden"
-          animate={{ width: menuOpen ? 'calc(100vw - 140px)' : 40 }}
+          animate={{ width: menuOpen ? '100%' : 40 }}
           transition={{ stiffness: 350, damping: 28, type: 'spring' }}
         >
           <SquashHamburger
             isOpen={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
+            barWidth={15}
+            barHeight={1.2}
             className={`flex h-9 w-10 flex-shrink-0 items-center justify-center ${
               menuOpen ? 'ml-0.5 h-7 w-7 rounded-[8px] bg-white/10' : ''
             }`}

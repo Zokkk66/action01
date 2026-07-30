@@ -4,9 +4,17 @@ interface SquashHamburgerProps {
   isOpen: boolean;
   onClick: () => void;
   className?: string;
+  barWidth?: number;
+  barHeight?: number;
 }
 
-export default function SquashHamburger({ isOpen, onClick, className }: SquashHamburgerProps) {
+export default function SquashHamburger({
+  isOpen,
+  onClick,
+  className,
+  barWidth = 18,
+  barHeight = 1.5,
+}: SquashHamburgerProps) {
   return (
     <motion.button
       onClick={onClick}
@@ -19,12 +27,12 @@ export default function SquashHamburger({ isOpen, onClick, className }: SquashHa
           className="absolute block bg-white"
           animate={{
             rotate: isOpen ? 45 : 0,
-            y: isOpen ? 0 : -4,
+            y: isOpen ? 0 : -barHeight * 2.67,
           }}
           transition={{ stiffness: 300, damping: 20 }}
           style={{
-            width: '18px',
-            height: '1.5px',
+            width: `${barWidth}px`,
+            height: `${barHeight}px`,
             transformOrigin: 'center',
           }}
         />
@@ -37,8 +45,8 @@ export default function SquashHamburger({ isOpen, onClick, className }: SquashHa
           }}
           transition={{ stiffness: 300, damping: 20 }}
           style={{
-            width: '18px',
-            height: '1.5px',
+            width: `${barWidth}px`,
+            height: `${barHeight}px`,
           }}
         />
         {/* 下方横条 */}
@@ -46,12 +54,12 @@ export default function SquashHamburger({ isOpen, onClick, className }: SquashHa
           className="absolute block bg-white"
           animate={{
             rotate: isOpen ? -45 : 0,
-            y: isOpen ? 0 : 4,
+            y: isOpen ? 0 : barHeight * 2.67,
           }}
           transition={{ stiffness: 300, damping: 20 }}
           style={{
-            width: '18px',
-            height: '1.5px',
+            width: `${barWidth}px`,
+            height: `${barHeight}px`,
             transformOrigin: 'center',
           }}
         />
